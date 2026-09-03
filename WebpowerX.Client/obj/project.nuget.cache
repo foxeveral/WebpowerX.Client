@@ -1,0 +1,27 @@
+{
+  "version": 2,
+  "dgSpecHash": "xwVPIQTCo9c=",
+  "success": true,
+  "projectFilePath": "D:\\MyCode\\Tools\\PostmarkStudio\\WebpowerX.Client\\WebpowerX.Client\\WebpowerX.Client.csproj",
+  "expectedPackageFiles": [
+    "F:\\NuGet\\NuGetPackages\\microsoft.bcl.asyncinterfaces\\10.0.11\\microsoft.bcl.asyncinterfaces.10.0.11.nupkg.sha512",
+    "F:\\NuGet\\NuGetPackages\\microsoft.extensions.configuration.abstractions\\10.0.11\\microsoft.extensions.configuration.abstractions.10.0.11.nupkg.sha512",
+    "F:\\NuGet\\NuGetPackages\\microsoft.extensions.dependencyinjection\\10.0.11\\microsoft.extensions.dependencyinjection.10.0.11.nupkg.sha512",
+    "F:\\NuGet\\NuGetPackages\\microsoft.extensions.dependencyinjection.abstractions\\10.0.11\\microsoft.extensions.dependencyinjection.abstractions.10.0.11.nupkg.sha512",
+    "F:\\NuGet\\NuGetPackages\\microsoft.extensions.http\\10.0.11\\microsoft.extensions.http.10.0.11.nupkg.sha512",
+    "F:\\NuGet\\NuGetPackages\\microsoft.extensions.logging\\10.0.11\\microsoft.extensions.logging.10.0.11.nupkg.sha512",
+    "F:\\NuGet\\NuGetPackages\\microsoft.extensions.logging.abstractions\\10.0.11\\microsoft.extensions.logging.abstractions.10.0.11.nupkg.sha512",
+    "F:\\NuGet\\NuGetPackages\\microsoft.extensions.options\\10.0.11\\microsoft.extensions.options.10.0.11.nupkg.sha512",
+    "F:\\NuGet\\NuGetPackages\\microsoft.extensions.primitives\\10.0.11\\microsoft.extensions.primitives.10.0.11.nupkg.sha512",
+    "F:\\NuGet\\NuGetPackages\\system.buffers\\4.6.1\\system.buffers.4.6.1.nupkg.sha512",
+    "F:\\NuGet\\NuGetPackages\\system.componentmodel.annotations\\5.0.0\\system.componentmodel.annotations.5.0.0.nupkg.sha512",
+    "F:\\NuGet\\NuGetPackages\\system.diagnostics.diagnosticsource\\10.0.11\\system.diagnostics.diagnosticsource.10.0.11.nupkg.sha512",
+    "F:\\NuGet\\NuGetPackages\\system.io.pipelines\\10.0.11\\system.io.pipelines.10.0.11.nupkg.sha512",
+    "F:\\NuGet\\NuGetPackages\\system.memory\\4.6.3\\system.memory.4.6.3.nupkg.sha512",
+    "F:\\NuGet\\NuGetPackages\\system.runtime.compilerservices.unsafe\\6.1.2\\system.runtime.compilerservices.unsafe.6.1.2.nupkg.sha512",
+    "F:\\NuGet\\NuGetPackages\\system.text.encodings.web\\10.0.11\\system.text.encodings.web.10.0.11.nupkg.sha512",
+    "F:\\NuGet\\NuGetPackages\\system.text.json\\10.0.11\\system.text.json.10.0.11.nupkg.sha512",
+    "F:\\NuGet\\NuGetPackages\\system.threading.tasks.extensions\\4.6.3\\system.threading.tasks.extensions.4.6.3.nupkg.sha512"
+  ],
+  "logs": []
+}

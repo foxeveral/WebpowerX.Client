@@ -1,0 +1,10 @@
+D:\MyCode\Tools\PostmarkStudio\WebpowerX.Client\WebpowerX.Client\bin\Debug\netstandard2.1\WebpowerX.Client.deps.json
+D:\MyCode\Tools\PostmarkStudio\WebpowerX.Client\WebpowerX.Client\bin\Debug\netstandard2.1\WebpowerX.Client.dll
+D:\MyCode\Tools\PostmarkStudio\WebpowerX.Client\WebpowerX.Client\bin\Debug\netstandard2.1\WebpowerX.Client.pdb
+D:\MyCode\Tools\PostmarkStudio\WebpowerX.Client\WebpowerX.Client\obj\Debug\netstandard2.1\WebpowerX.Client.csproj.AssemblyReference.cache
+D:\MyCode\Tools\PostmarkStudio\WebpowerX.Client\WebpowerX.Client\obj\Debug\netstandard2.1\WebpowerX.Client.GeneratedMSBuildEditorConfig.editorconfig
+D:\MyCode\Tools\PostmarkStudio\WebpowerX.Client\WebpowerX.Client\obj\Debug\netstandard2.1\WebpowerX.Client.AssemblyInfoInputs.cache
+D:\MyCode\Tools\PostmarkStudio\WebpowerX.Client\WebpowerX.Client\obj\Debug\netstandard2.1\WebpowerX.Client.AssemblyInfo.cs
+D:\MyCode\Tools\PostmarkStudio\WebpowerX.Client\WebpowerX.Client\obj\Debug\netstandard2.1\WebpowerX.Client.csproj.CoreCompileInputs.cache
+D:\MyCode\Tools\PostmarkStudio\WebpowerX.Client\WebpowerX.Client\obj\Debug\netstandard2.1\WebpowerX.Client.dll
+D:\MyCode\Tools\PostmarkStudio\WebpowerX.Client\WebpowerX.Client\obj\Debug\netstandard2.1\WebpowerX.Client.pdb
