@@ -56,13 +56,13 @@ namespace WebpowerX.Client
         /// <summary>
         /// 调用单封事务邮件发送接口。
         /// </summary>
-        public Task<ApiResponse<SendResult>> SendSingleTransactionalEmailAsync(SingleEmailRequest request, CancellationToken cancellationToken = default)
+        public Task<ApiResponse<SendResult>> SendTransEmailAsync(SingleEmailRequest request, CancellationToken cancellationToken = default)
             => SendJsonAsync<SendResult>("iemail-send/open-api/v2/send/transactional/sendSingleEmail", request, cancellationToken);
 
         /// <summary>
         /// 调用单封普通邮件发送接口。
         /// </summary>
-        public Task<ApiResponse<SendResult>> SendSingleEmailAsync(SingleEmailRequest request, CancellationToken cancellationToken = default)
+        public Task<ApiResponse<SendResult>> SendEmailAsync(SingleEmailRequest request, CancellationToken cancellationToken = default)
             => SendJsonAsync<SendResult>("iemail-send/open-api/v2/send/sendSingleEmail", request, cancellationToken);
 
         /// <summary>

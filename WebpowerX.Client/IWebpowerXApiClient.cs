@@ -18,7 +18,7 @@ namespace WebpowerX.Client
         /// <param name="request">单封邮件发送请求，包含发件地址、主题、正文、单个收件人和可选的 Enjoy 业务数据。</param>
         /// <param name="cancellationToken">取消当前异步请求的令牌。</param>
         /// <returns>接口受理结果，成功时通常包含 <c>responseId</c> 和 <c>sendTaskId</c>。</returns>
-        Task<ApiResponse<SendResult>> SendSingleTransactionalEmailAsync(SingleEmailRequest request, CancellationToken cancellationToken = default);
+        Task<ApiResponse<SendResult>> SendTransEmailAsync(SingleEmailRequest request, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// 发送单封普通邮件，适合单个收件人的普通业务邮件。
@@ -26,7 +26,7 @@ namespace WebpowerX.Client
         /// <param name="request">单封邮件发送请求，包含发件地址、主题、正文、单个收件人和可选的 Enjoy 业务数据。</param>
         /// <param name="cancellationToken">取消当前异步请求的令牌。</param>
         /// <returns>接口受理结果，成功时通常包含 <c>responseId</c> 和 <c>sendTaskId</c>。</returns>
-        Task<ApiResponse<SendResult>> SendSingleEmailAsync(SingleEmailRequest request, CancellationToken cancellationToken = default);
+        Task<ApiResponse<SendResult>> SendEmailAsync(SingleEmailRequest request, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// 批量发送普通邮件，单次最多 1000 人；每个收件人的扩展字段相互独立，通过普通 {$field} 占位符完成个性化，不支持 Enjoy 业务数据。
