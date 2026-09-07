@@ -120,7 +120,7 @@ namespace WebpowerX.Client
         /// <summary>
         /// 调用获取发件域名接口。
         /// </summary>
-        public Task<ApiResponse<ResultList<DomainInfo>>> GetDomainAsync(GetDomainQuery request, CancellationToken cancellationToken = default)
+        public Task<ApiResponse<ResultList<DomainInfo>>> GetDomainAsync(DomainQuery request, CancellationToken cancellationToken = default)
             => GetAsync<ResultList<DomainInfo>>("openapi/open-api/v1/email/getDomain", request, cancellationToken);
 
         /// <summary>
@@ -138,7 +138,7 @@ namespace WebpowerX.Client
         /// <summary>
         /// 调用获取发件地址接口。
         /// </summary>
-        public Task<ApiResponse<ResultList<SenderAddressInfo>>> GetSenderAsync(GetSenderQuery? request = null, CancellationToken cancellationToken = default)
+        public Task<ApiResponse<ResultList<SenderAddressInfo>>> GetSenderAsync(SenderQuery? request = null, CancellationToken cancellationToken = default)
             => GetAsync<ResultList<SenderAddressInfo>>("openapi/open-api/v1/email/getSender", request, cancellationToken);
 
         /// <summary>
@@ -386,8 +386,17 @@ namespace WebpowerX.Client
             => SendAsync<TResponse>(path, HttpMethod.Delete, null, query, cancellationToken);
 
         /// <summary>
-        /// 发送请求并反序列化响应。
+        /// 发送请求并反序列化响应
         /// </summary>
+        /// <typeparam name="TResponse"></typeparam>
+        /// <param name="path"></param>
+        /// <param name="method"></param>
+        /// <param name="body"></param>
+        /// <param name="query"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        /// <exception cref="WebpowerXApiException"></exception>
+        /// <exception cref="WebpowerXApiRequestException"></exception>
         private async Task<ApiResponse<TResponse>> SendAsync<TResponse>(string path, HttpMethod method, object? body, object? query, CancellationToken cancellationToken)
         {
             var accessSign = WebpowerXSignatureGenerator.Generate(_options.AccessKeySecret);

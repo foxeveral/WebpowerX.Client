@@ -102,7 +102,7 @@ namespace WebpowerX.Client
         /// <param name="domain">要查询的发件域名。</param>
         /// <param name="cancellationToken">取消当前异步请求的令牌。</param>
         /// <returns>发件域名列表结果。</returns>
-        Task<ApiResponse<ResultList<DomainInfo>>> GetDomainAsync(GetDomainQuery request, CancellationToken cancellationToken = default);
+        Task<ApiResponse<ResultList<DomainInfo>>> GetDomainAsync(DomainQuery request, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// 获取发件域名可用的邮件通道。
@@ -126,7 +126,7 @@ namespace WebpowerX.Client
         /// <param name="request">可选查询参数，字段以 WebpowerX 开放平台文档为准。</param>
         /// <param name="cancellationToken">取消当前异步请求的令牌。</param>
         /// <returns>发件地址列表结果。</returns>
-        Task<ApiResponse<ResultList<SenderAddressInfo>>> GetSenderAsync(GetSenderQuery? request = null, CancellationToken cancellationToken = default);
+        Task<ApiResponse<ResultList<SenderAddressInfo>>> GetSenderAsync(SenderQuery? request = null, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// 获取回复地址。

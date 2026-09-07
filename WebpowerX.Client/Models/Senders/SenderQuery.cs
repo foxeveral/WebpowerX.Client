@@ -5,7 +5,7 @@ namespace WebpowerX.Client.Models
     /// <summary>
     /// 获取发件地址接口的查询参数。
     /// </summary>
-    public sealed class GetSenderQuery
+    public sealed class SenderQuery
     {
         /// <summary>
         /// 发件地址序列号，精确匹配。

@@ -5,7 +5,7 @@ namespace WebpowerX.Client.Models
     /// <summary>
     /// 获取发件域名接口的查询参数。
     /// </summary>
-    public sealed class GetDomainQuery
+    public sealed class DomainQuery
     {
         /// <summary>
         /// 发件域名，支持模糊查询；不传时返回全部可用发件域名。
