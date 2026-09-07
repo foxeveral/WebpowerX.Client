@@ -2,6 +2,7 @@ using System;
 using System.Net.Http.Headers;
 using Microsoft.Extensions.Options;
 using WebpowerX.Client;
+using WebpowerX.Client.Internal;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -28,19 +29,20 @@ namespace Microsoft.Extensions.DependencyInjection
                 throw new ArgumentNullException(nameof(configure));
             }
 
-            services.AddOptions<WebpowerXApiOptions>().Configure(configure);
+            services.AddOptions<WebpowerXApiOptions>()
+                .Configure(configure)
+                .Validate(options => !string.IsNullOrWhiteSpace(options.AccessKey), "WebpowerX AccessKey 不能为空。")
+                .Validate(options => !string.IsNullOrWhiteSpace(options.AccessKeySecret), "WebpowerX AccessKeySecret 不能为空。");
+
             services.AddHttpClient<IWebpowerXApiClient, WebpowerXApiClient>((sp, client) =>
             {
                 var options = sp.GetRequiredService<IOptions<WebpowerXApiOptions>>().Value;
-                client.BaseAddress = new Uri(NormalizeBaseUrl(options.BaseUrl));
+                client.BaseAddress = new Uri(UrlHelper.NormalizeBaseUrl(options.BaseUrl));
                 client.DefaultRequestHeaders.Accept.Clear();
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             });
 
             return services;
         }
-
-        private static string NormalizeBaseUrl(string baseUrl)
-            => baseUrl.EndsWith("/", StringComparison.Ordinal) ? baseUrl : baseUrl + "/";
     }
 }

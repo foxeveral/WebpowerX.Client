@@ -1,11 +1,15 @@
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using System;
+using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using WebpowerX.Client.Internal;
@@ -18,6 +22,11 @@ namespace WebpowerX.Client
     /// </summary>
     public sealed class WebpowerXApiClient : IWebpowerXApiClient
     {
+        /// <summary>
+        /// 查询参数定义缓存。
+        /// </summary>
+        private static readonly ConcurrentDictionary<Type, QueryParameter[]> QueryParameterCache = new ConcurrentDictionary<Type, QueryParameter[]>();
+
         private readonly HttpClient _httpClient;
         private readonly WebpowerXApiOptions _options;
 
@@ -33,7 +42,7 @@ namespace WebpowerX.Client
 
             if (_httpClient.BaseAddress == null)
             {
-                _httpClient.BaseAddress = new Uri(NormalizeBaseUrl(_options.BaseUrl));
+                _httpClient.BaseAddress = new Uri(UrlHelper.NormalizeBaseUrl(_options.BaseUrl));
             }
 
             if (_httpClient.DefaultRequestHeaders.Accept.Count == 0)
@@ -47,62 +56,62 @@ namespace WebpowerX.Client
         /// <summary>
         /// 调用单封事务邮件发送接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXSendTaskResponse>> SendSingleTransactionalEmailAsync(WebpowerXSingleEmailRequest request, CancellationToken cancellationToken = default)
-            => SendJsonAsync<WebpowerXSendTaskResponse>("iemail-send/open-api/v2/send/transactional/sendSingleEmail", request, cancellationToken);
+        public Task<ApiResponse<SendResult>> SendSingleTransactionalEmailAsync(SingleEmailRequest request, CancellationToken cancellationToken = default)
+            => SendJsonAsync<SendResult>("iemail-send/open-api/v2/send/transactional/sendSingleEmail", request, cancellationToken);
 
         /// <summary>
         /// 调用单封普通邮件发送接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXSendTaskResponse>> SendSingleEmailAsync(WebpowerXSingleEmailRequest request, CancellationToken cancellationToken = default)
-            => SendJsonAsync<WebpowerXSendTaskResponse>("iemail-send/open-api/v2/send/sendSingleEmail", request, cancellationToken);
+        public Task<ApiResponse<SendResult>> SendSingleEmailAsync(SingleEmailRequest request, CancellationToken cancellationToken = default)
+            => SendJsonAsync<SendResult>("iemail-send/open-api/v2/send/sendSingleEmail", request, cancellationToken);
 
         /// <summary>
         /// 调用批量普通邮件发送接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXSendTaskResponse>> SendBulkEmailsAsync(WebpowerXSingleEmailRequest request, CancellationToken cancellationToken = default)
-            => SendJsonAsync<WebpowerXSendTaskResponse>("iemail-send/open-api/v2/send/sendBulkEmails", request, cancellationToken);
+        public Task<ApiResponse<SendResult>> SendBulkEmailsAsync(BulkEmailRequest request, CancellationToken cancellationToken = default)
+            => SendJsonAsync<SendResult>("iemail-send/open-api/v2/send/sendBulkEmails", request, cancellationToken);
 
         /// <summary>
         /// 调用个性化发送任务创建接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXSendTaskCreationResult>> CreatePersonalizedTaskAsync(WebpowerXSingleEmailRequest request, CancellationToken cancellationToken = default)
-            => SendJsonAsync<WebpowerXSendTaskCreationResult>("iemail-send/open-api/v2/send-task/createPersonalizedTask", request, cancellationToken);
+        public Task<ApiResponse<SendTaskCreateResult>> CreatePersonalizedTaskAsync(CreatePersonalizedTaskRequest request, CancellationToken cancellationToken = default)
+            => SendJsonAsync<SendTaskCreateResult>("iemail-send/open-api/v2/send-task/createPersonalizedTask", request, cancellationToken);
 
         /// <summary>
         /// 调用固定模板发送任务创建接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXSendTaskCreationResult>> CreateTemplateTaskAsync(WebpowerXSingleEmailRequest request, CancellationToken cancellationToken = default)
-            => SendJsonAsync<WebpowerXSendTaskCreationResult>("iemail-send/open-api/v2/send-task/createTemplateTask", request, cancellationToken);
+        public Task<ApiResponse<SendTaskCreateResult>> CreateTemplateTaskAsync(CreateTemplateTaskRequest request, CancellationToken cancellationToken = default)
+            => SendJsonAsync<SendTaskCreateResult>("iemail-send/open-api/v2/send-task/createTemplateTask", request, cancellationToken);
 
         /// <summary>
         /// 调用个性化任务内发送接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXSendTaskResponse>> SendWithinPersonalizedTaskAsync(WebpowerXSingleEmailRequest request, CancellationToken cancellationToken = default)
-            => SendJsonAsync<WebpowerXSendTaskResponse>("iemail-send/open-api/v2/send/sendWithinPersonalizedTask", request, cancellationToken);
+        public Task<ApiResponse<SendResult>> SendWithinPersonalizedTaskAsync(SendWithinPersonalizedTaskRequest request, CancellationToken cancellationToken = default)
+            => SendJsonAsync<SendResult>("iemail-send/open-api/v2/send/sendWithinPersonalizedTask", request, cancellationToken);
 
         /// <summary>
         /// 调用固定模板任务单封发送接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXSendTaskResponse>> SendWithinTemplateTaskAsync(WebpowerXSingleEmailRequest request, CancellationToken cancellationToken = default)
-            => SendJsonAsync<WebpowerXSendTaskResponse>("iemail-send/open-api/v2/send/sendWithinTemplateTask", request, cancellationToken);
+        public Task<ApiResponse<SendResult>> SendWithinTemplateTaskAsync(SendWithinTemplateTaskRequest request, CancellationToken cancellationToken = default)
+            => SendJsonAsync<SendResult>("iemail-send/open-api/v2/send/sendWithinTemplateTask", request, cancellationToken);
 
         /// <summary>
         /// 调用固定模板任务批量发送接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXSendTaskResponse>> SendWithinTemplateTaskToEmailsAsync(WebpowerXSingleEmailRequest request, CancellationToken cancellationToken = default)
-            => SendJsonAsync<WebpowerXSendTaskResponse>("iemail-send/open-api/v2/send/sendWithinTemplateTaskToEmails", request, cancellationToken);
+        public Task<ApiResponse<SendResult>> SendWithinTemplateTaskToEmailsAsync(SendWithinTemplateTaskToEmailsRequest request, CancellationToken cancellationToken = default)
+            => SendJsonAsync<SendResult>("iemail-send/open-api/v2/send/sendWithinTemplateTaskToEmails", request, cancellationToken);
 
         /// <summary>
         /// 调用云文件自定义内容任务创建接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXSendTaskCreationResult>> CreateCloudFileRecipientTaskAsync(WebpowerXSingleEmailRequest request, CancellationToken cancellationToken = default)
-            => SendJsonAsync<WebpowerXSendTaskCreationResult>("iemail-send/open-api/v2/send-task/createCloudFileRecipientTask", request, cancellationToken);
+        public Task<ApiResponse<SendTaskCreateResult>> CreateCloudFileRecipientTaskAsync(CreateCloudFileTaskRequest request, CancellationToken cancellationToken = default)
+            => SendJsonAsync<SendTaskCreateResult>("iemail-send/open-api/v2/send-task/createCloudFileRecipientTask", request, cancellationToken);
 
         /// <summary>
         /// 调用云文件素材任务创建接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXSendTaskCreationResult>> CreateCloudFileRecipientTaskFromMaterialAsync(WebpowerXSingleEmailRequest request, CancellationToken cancellationToken = default)
-            => SendJsonAsync<WebpowerXSendTaskCreationResult>("iemail-send/open-api/v2/send-task/createCloudFileRecipientTask/fromMaterial", request, cancellationToken);
+        public Task<ApiResponse<SendTaskCreateResult>> CreateCloudFileRecipientTaskFromMaterialAsync(CreateCloudFileTaskFromMaterialRequest request, CancellationToken cancellationToken = default)
+            => SendJsonAsync<SendTaskCreateResult>("iemail-send/open-api/v2/send-task/createCloudFileRecipientTask/fromMaterial", request, cancellationToken);
 
         #endregion
 
@@ -111,38 +120,38 @@ namespace WebpowerX.Client
         /// <summary>
         /// 调用获取发件域名接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXResultListResponse<WebpowerXDomainInfo>>> GetDomainAsync(string domain, CancellationToken cancellationToken = default)
-            => GetAsync<WebpowerXResultListResponse<WebpowerXDomainInfo>>("openapi/open-api/v1/email/getDomain", new { domain }, cancellationToken);
+        public Task<ApiResponse<ResultList<DomainInfo>>> GetDomainAsync(GetDomainQuery request, CancellationToken cancellationToken = default)
+            => GetAsync<ResultList<DomainInfo>>("openapi/open-api/v1/email/getDomain", request, cancellationToken);
 
         /// <summary>
         /// 调用获取发件域名邮件通道接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXResultListResponse<WebpowerXEmailRouteInfo>>> GetEmailRouteOverDomainAsync(string domain, CancellationToken cancellationToken = default)
-            => GetAsync<WebpowerXResultListResponse<WebpowerXEmailRouteInfo>>("openapi/open-api/v1/email/getEmailRouteOverDomain", new { domain }, cancellationToken);
+        public Task<ApiResponse<ResultList<EmailRouteInfo>>> GetEmailRouteOverDomainAsync(EmailRouteOverDomainQuery request, CancellationToken cancellationToken = default)
+            => GetAsync<ResultList<EmailRouteInfo>>("openapi/open-api/v1/email/getEmailRouteOverDomain", request, cancellationToken);
 
         /// <summary>
         /// 调用创建发件地址接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXResultListResponse<WebpowerXSenderAddressInfo>>> CreateSenderAsync(object request, CancellationToken cancellationToken = default)
-            => SendJsonAsync<WebpowerXResultListResponse<WebpowerXSenderAddressInfo>>("openapi/open-api/v1/email/createSender", request, cancellationToken);
+        public Task<ApiResponse<ResultList<SenderAddressInfo>>> CreateSenderAsync(CreateSenderRequest request, CancellationToken cancellationToken = default)
+            => SendJsonAsync<ResultList<SenderAddressInfo>>("openapi/open-api/v1/email/createSender", request, cancellationToken);
 
         /// <summary>
         /// 调用获取发件地址接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXResultListResponse<WebpowerXSenderAddressInfo>>> GetSenderAsync(object? request = null, CancellationToken cancellationToken = default)
-            => GetAsync<WebpowerXResultListResponse<WebpowerXSenderAddressInfo>>("openapi/open-api/v1/email/getSender", request, cancellationToken);
+        public Task<ApiResponse<ResultList<SenderAddressInfo>>> GetSenderAsync(GetSenderQuery? request = null, CancellationToken cancellationToken = default)
+            => GetAsync<ResultList<SenderAddressInfo>>("openapi/open-api/v1/email/getSender", request, cancellationToken);
 
         /// <summary>
         /// 调用获取回复地址接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXResultListResponse<WebpowerXReplyAddressInfo>>> GetReplyAddressAsync(object? request = null, CancellationToken cancellationToken = default)
-            => GetAsync<WebpowerXResultListResponse<WebpowerXReplyAddressInfo>>("openapi/open-api/v1/email/getReplyAddress", request, cancellationToken);
+        public Task<ApiResponse<ResultList<ReplyAddressInfo>>> GetReplyAddressAsync(ReplyAddressQuery? request = null, CancellationToken cancellationToken = default)
+            => GetAsync<ResultList<ReplyAddressInfo>>("openapi/open-api/v1/email/getReplyAddress", request, cancellationToken);
 
         /// <summary>
         /// 调用新增或更新回复地址接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXEmptyResult>> SaveOrUpdateReplyAddressAsync(object request, CancellationToken cancellationToken = default)
-            => SendJsonAsync<WebpowerXEmptyResult>("openapi/open-api/v1/email/saveOrUpdateReplyAddress", request, cancellationToken);
+        public Task<ApiResponse<EmptyResult>> SaveOrUpdateReplyAddressAsync(SaveOrUpdateReplyAddressRequest request, CancellationToken cancellationToken = default)
+            => SendJsonAsync<EmptyResult>("openapi/open-api/v1/email/saveOrUpdateReplyAddress", request, cancellationToken);
 
         #endregion
 
@@ -151,32 +160,32 @@ namespace WebpowerX.Client
         /// <summary>
         /// 调用联系人分页列表接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXPagedResponse<WebpowerXContactInfo>>> ContactPageListAsync(object? request = null, CancellationToken cancellationToken = default)
-            => GetAsync<WebpowerXPagedResponse<WebpowerXContactInfo>>("openapi/open-api/v1/contact/contactPageList", request, cancellationToken);
+        public Task<ApiResponse<PagedResult<ContactInfo>>> ContactPageListAsync(ContactPageListQuery request, CancellationToken cancellationToken = default)
+            => GetAsync<PagedResult<ContactInfo>>("openapi/open-api/v1/contact/contactPageList", request, cancellationToken);
 
         /// <summary>
         /// 调用联系人属性接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXResultListResponse<WebpowerXContactAttributeValue>>> ContactCustomerDetailsAsync(object request, CancellationToken cancellationToken = default)
-            => GetAsync<WebpowerXResultListResponse<WebpowerXContactAttributeValue>>("openapi/open-api/v1/contact/contactCustomerDetails", request, cancellationToken);
+        public Task<ApiResponse<ResultList<ContactAttributeValue>>> ContactCustomerDetailsAsync(ContactIdentityQuery request, CancellationToken cancellationToken = default)
+            => GetAsync<ResultList<ContactAttributeValue>>("openapi/open-api/v1/contact/contactCustomerDetails", request, cancellationToken);
 
         /// <summary>
         /// 调用联系人字段详情接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXResultListResponse<WebpowerXContactFieldDetail>>> ContactFieldDetailsAsync(object request, CancellationToken cancellationToken = default)
-            => GetAsync<WebpowerXResultListResponse<WebpowerXContactFieldDetail>>("openapi/open-api/v1/contact/contactFieldDetails", request, cancellationToken);
+        public Task<ApiResponse<ResultList<ContactFieldDetail>>> ContactFieldDetailsAsync(CancellationToken cancellationToken = default)
+            => GetAsync<ResultList<ContactFieldDetail>>("openapi/open-api/v1/contact/contactFieldDetails", null, cancellationToken);
 
         /// <summary>
         /// 调用联系人标签列表接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXContactLabelListResponse>> ContactLabelListAsync(object? request = null, CancellationToken cancellationToken = default)
-            => GetAsync<WebpowerXContactLabelListResponse>("openapi/open-api/v1/contact/contactLabelList", request, cancellationToken);
+        public Task<ApiResponse<ContactLabelListResult>> ContactLabelListAsync(ContactIdentityQuery request, CancellationToken cancellationToken = default)
+            => GetAsync<ContactLabelListResult>("openapi/open-api/v1/contact/contactLabelList", request, cancellationToken);
 
         /// <summary>
         /// 调用标签下联系人分页接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXPagedResponse<WebpowerXContactInfo>>> ContactByLabelPageListAsync(object? request = null, CancellationToken cancellationToken = default)
-            => GetAsync<WebpowerXPagedResponse<WebpowerXContactInfo>>("openapi/open-api/v1/contact/contactByLabelPageList", request, cancellationToken);
+        public Task<ApiResponse<PagedResult<ContactInfo>>> ContactByLabelPageListAsync(ContactByLabelPageQuery request, CancellationToken cancellationToken = default)
+            => GetAsync<PagedResult<ContactInfo>>("openapi/open-api/v1/contact/contactByLabelPageList", request, cancellationToken);
 
         #endregion
 
@@ -185,26 +194,26 @@ namespace WebpowerX.Client
         /// <summary>
         /// 调用创建联系人属性接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXContactFieldUpsertResult>> CreateContactFieldAsync(object request, CancellationToken cancellationToken = default)
-            => SendJsonAsync<WebpowerXContactFieldUpsertResult>("openapi/open-api/v1/contact/createContactField", request, cancellationToken);
+        public Task<ApiResponse<ContactFieldUpsertResult>> CreateContactFieldAsync(CreateContactFieldRequest request, CancellationToken cancellationToken = default)
+            => SendJsonAsync<ContactFieldUpsertResult>("openapi/open-api/v1/contact/createContactField", request, cancellationToken);
 
         /// <summary>
         /// 调用更新联系人属性接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXEmptyResult>> EditContactFieldAsync(object request, CancellationToken cancellationToken = default)
-            => SendJsonAsync<WebpowerXEmptyResult>("openapi/open-api/v1/contact/editContactField", request, cancellationToken);
+        public Task<ApiResponse<EmptyResult>> EditContactFieldAsync(EditContactFieldRequest request, CancellationToken cancellationToken = default)
+            => PutJsonAsync<EmptyResult>("openapi/open-api/v1/contact/editContactField", request, cancellationToken);
 
         /// <summary>
         /// 调用删除联系人属性接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXEmptyResult>> DeleteContactFieldAsync(object request, CancellationToken cancellationToken = default)
-            => SendJsonAsync<WebpowerXEmptyResult>("openapi/open-api/v1/contact/deleteContactField", request, cancellationToken);
+        public Task<ApiResponse<EmptyResult>> DeleteContactFieldAsync(DeleteContactFieldQuery request, CancellationToken cancellationToken = default)
+            => DeleteAsync<EmptyResult>("openapi/open-api/v1/contact/deleteContactField", request, cancellationToken);
 
         /// <summary>
         /// 调用联系人属性列表接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXPagedResponse<WebpowerXContactFieldInfo>>> FindContactFieldAsync(object request, CancellationToken cancellationToken = default)
-            => GetAsync<WebpowerXPagedResponse<WebpowerXContactFieldInfo>>("openapi/open-api/v1/contact/findContactField", request, cancellationToken);
+        public Task<ApiResponse<PagedResult<ContactFieldInfo>>> FindContactFieldAsync(ContactFieldPageQuery? request = null, CancellationToken cancellationToken = default)
+            => GetAsync<PagedResult<ContactFieldInfo>>("openapi/open-api/v1/contact/findContactField", request, cancellationToken);
 
         #endregion
 
@@ -213,68 +222,68 @@ namespace WebpowerX.Client
         /// <summary>
         /// 调用创建标签接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXLabelUpsertResult>> CreateLabelAsync(object request, CancellationToken cancellationToken = default)
-            => SendJsonAsync<WebpowerXLabelUpsertResult>("openapi/open-api/v1/contact/createLabel", request, cancellationToken);
+        public Task<ApiResponse<LabelUpsertResult>> CreateLabelAsync(CreateLabelRequest request, CancellationToken cancellationToken = default)
+            => SendJsonAsync<LabelUpsertResult>("openapi/open-api/v1/contact/createLabel", request, cancellationToken);
 
         /// <summary>
         /// 调用编辑标签接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXLabelUpsertResult>> EditLabelAsync(object request, CancellationToken cancellationToken = default)
-            => SendJsonAsync<WebpowerXLabelUpsertResult>("openapi/open-api/v1/contact/editLabel", request, cancellationToken);
+        public Task<ApiResponse<LabelUpsertResult>> EditLabelAsync(EditLabelRequest request, CancellationToken cancellationToken = default)
+            => PutJsonAsync<LabelUpsertResult>("openapi/open-api/v1/contact/editLabel", request, cancellationToken);
 
         /// <summary>
         /// 调用删除标签接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXEmptyResult>> DeleteLabelAsync(object request, CancellationToken cancellationToken = default)
-            => SendJsonAsync<WebpowerXEmptyResult>("openapi/open-api/v1/contact/deleteLabel", request, cancellationToken);
+        public Task<ApiResponse<EmptyResult>> DeleteLabelAsync(DeleteLabelsRequest request, CancellationToken cancellationToken = default)
+            => DeleteJsonAsync<EmptyResult>("openapi/open-api/v1/contact/deleteLabel", request, cancellationToken);
 
         /// <summary>
         /// 调用标签分页列表接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXPagedResponse<WebpowerXLabelInfo>>> LabelPageListAsync(object? request = null, CancellationToken cancellationToken = default)
-            => GetAsync<WebpowerXPagedResponse<WebpowerXLabelInfo>>("openapi/open-api/v1/contact/labelPageList", request, cancellationToken);
+        public Task<ApiResponse<PagedResult<LabelInfo>>> LabelPageListAsync(LabelPageQuery? request = null, CancellationToken cancellationToken = default)
+            => GetAsync<PagedResult<LabelInfo>>("openapi/open-api/v1/contact/labelPageList", request, cancellationToken);
 
         /// <summary>
         /// 调用标签分组列表接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXResultListResponse<WebpowerXLabelGroupInfo>>> LabelGroupListAsync(object? request = null, CancellationToken cancellationToken = default)
-            => GetAsync<WebpowerXResultListResponse<WebpowerXLabelGroupInfo>>("openapi/open-api/v1/contact/labelGroupList", request, cancellationToken);
+        public Task<ApiResponse<ResultList<LabelGroupInfo>>> LabelGroupListAsync(LabelGroupListQuery? request = null, CancellationToken cancellationToken = default)
+            => GetAsync<ResultList<LabelGroupInfo>>("openapi/open-api/v1/contact/labelGroupList", request, cancellationToken);
 
         /// <summary>
         /// 调用创建标签分组接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXLabelGroupUpsertResult>> CreateLabelGroupAsync(object request, CancellationToken cancellationToken = default)
-            => SendJsonAsync<WebpowerXLabelGroupUpsertResult>("openapi/open-api/v1/contact/createLabelGroup", request, cancellationToken);
+        public Task<ApiResponse<LabelGroupUpsertResult>> CreateLabelGroupAsync(CreateLabelGroupRequest request, CancellationToken cancellationToken = default)
+            => SendJsonAsync<LabelGroupUpsertResult>("openapi/open-api/v1/contact/createLabelGroup", request, cancellationToken);
 
         /// <summary>
         /// 调用编辑标签分组接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXLabelGroupUpsertResult>> EditLabelGroupAsync(object request, CancellationToken cancellationToken = default)
-            => SendJsonAsync<WebpowerXLabelGroupUpsertResult>("openapi/open-api/v1/contact/editLabelGroup", request, cancellationToken);
+        public Task<ApiResponse<LabelGroupUpsertResult>> EditLabelGroupAsync(EditLabelGroupRequest request, CancellationToken cancellationToken = default)
+            => PutJsonAsync<LabelGroupUpsertResult>("openapi/open-api/v1/contact/editLabelGroup", request, cancellationToken);
 
         /// <summary>
         /// 调用删除标签分组接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXEmptyResult>> DeleteLabelGroupAsync(object request, CancellationToken cancellationToken = default)
-            => SendJsonAsync<WebpowerXEmptyResult>("openapi/open-api/v1/contact/deleteLabelGroup", request, cancellationToken);
+        public Task<ApiResponse<EmptyResult>> DeleteLabelGroupAsync(DeleteLabelGroupQuery request, CancellationToken cancellationToken = default)
+            => DeleteAsync<EmptyResult>("openapi/open-api/v1/contact/deleteLabelGroup", request, cancellationToken);
 
         /// <summary>
         /// 调用更改联系人标签接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXEmptyResult>> ChangeCustomerLabelAsync(object request, CancellationToken cancellationToken = default)
-            => SendJsonAsync<WebpowerXEmptyResult>("openapi/open-api/v1/contact/ChangeCustomerLabel", request, cancellationToken);
+        public Task<ApiResponse<EmptyResult>> ChangeCustomerLabelAsync(ChangeCustomerLabelRequest request, CancellationToken cancellationToken = default)
+            => SendJsonAsync<EmptyResult>("openapi/open-api/v1/contact/ChangeCustomerLabel", request, cancellationToken);
 
         /// <summary>
         /// 调用添加标签到联系人接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXResultListResponse<WebpowerXCustomerLabelAddResult>>> SaveCustomerLabelAndAddAsync(object request, CancellationToken cancellationToken = default)
-            => SendJsonAsync<WebpowerXResultListResponse<WebpowerXCustomerLabelAddResult>>("openapi/open-api/v1/contact/saveCustomerLabelAndAdd", request, cancellationToken);
+        public Task<ApiResponse<ResultList<CustomerLabelAddResult>>> SaveCustomerLabelAndAddAsync(SaveCustomerLabelAndAddRequest request, CancellationToken cancellationToken = default)
+            => SendJsonAsync<ResultList<CustomerLabelAddResult>>("openapi/open-api/v1/contact/saveCustomerLabelAndAdd", request, cancellationToken);
 
         /// <summary>
         /// 调用删除联系人的标签接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXEmptyResult>> DeleteCustomerLabelAsync(object request, CancellationToken cancellationToken = default)
-            => SendJsonAsync<WebpowerXEmptyResult>("openapi/open-api/v1/contact/deleteCustomerLabel", request, cancellationToken);
+        public Task<ApiResponse<EmptyResult>> DeleteCustomerLabelAsync(DeleteCustomerLabelQuery request, CancellationToken cancellationToken = default)
+            => DeleteAsync<EmptyResult>("openapi/open-api/v1/contact/deleteCustomerLabel", request, cancellationToken);
 
         #endregion
 
@@ -283,56 +292,56 @@ namespace WebpowerX.Client
         /// <summary>
         /// 调用素材分组列表接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXResultListResponse<WebpowerXMaterialGroupInfo>>> GroupListAsync(object? request = null, CancellationToken cancellationToken = default)
-            => GetAsync<WebpowerXResultListResponse<WebpowerXMaterialGroupInfo>>("openapi/open-api/v1/material/groupList", request, cancellationToken);
+        public Task<ApiResponse<ResultList<MaterialGroupInfo>>> GroupListAsync(MaterialGroupListQuery? request = null, CancellationToken cancellationToken = default)
+            => GetAsync<ResultList<MaterialGroupInfo>>("openapi/open-api/v1/material/groupList", request, cancellationToken);
 
         /// <summary>
         /// 调用创建素材分组接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXMaterialGroupUpsertResult>> CreateMaterialGroupAsync(object request, CancellationToken cancellationToken = default)
-            => SendJsonAsync<WebpowerXMaterialGroupUpsertResult>("openapi/open-api/v1/material/createMaterialGroup", request, cancellationToken);
+        public Task<ApiResponse<MaterialGroupUpsertResult>> CreateMaterialGroupAsync(CreateMaterialGroupRequest request, CancellationToken cancellationToken = default)
+            => SendJsonAsync<MaterialGroupUpsertResult>("openapi/open-api/v1/material/createMaterialGroup", request, cancellationToken);
 
         /// <summary>
         /// 调用编辑素材分组接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXMaterialGroupUpsertResult>> EditMaterialGroupAsync(object request, CancellationToken cancellationToken = default)
-            => SendJsonAsync<WebpowerXMaterialGroupUpsertResult>("openapi/open-api/v1/material/editMaterialGroup", request, cancellationToken);
+        public Task<ApiResponse<MaterialGroupUpsertResult>> EditMaterialGroupAsync(EditMaterialGroupRequest request, CancellationToken cancellationToken = default)
+            => PutJsonAsync<MaterialGroupUpsertResult>("openapi/open-api/v1/material/editMaterialGroup", request, cancellationToken);
 
         /// <summary>
         /// 调用删除素材分组接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXEmptyResult>> DeleteMaterialGroupAsync(object request, CancellationToken cancellationToken = default)
-            => SendJsonAsync<WebpowerXEmptyResult>("openapi/open-api/v1/material/deleteMaterialGroup", request, cancellationToken);
+        public Task<ApiResponse<EmptyResult>> DeleteMaterialGroupAsync(DeleteMaterialGroupQuery request, CancellationToken cancellationToken = default)
+            => DeleteAsync<EmptyResult>("openapi/open-api/v1/material/deleteMaterialGroup", request, cancellationToken);
 
         /// <summary>
         /// 调用邮件素材分页列表接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXPagedResponse<WebpowerXMaterialInfo>>> EmailMaterialPageListAsync(object? request = null, CancellationToken cancellationToken = default)
-            => GetAsync<WebpowerXPagedResponse<WebpowerXMaterialInfo>>("openapi/open-api/v1/material/emailMaterialPageList", request, cancellationToken);
+        public Task<ApiResponse<PagedResult<MaterialInfo>>> EmailMaterialPageListAsync(EmailMaterialPageQuery? request = null, CancellationToken cancellationToken = default)
+            => GetAsync<PagedResult<MaterialInfo>>("openapi/open-api/v1/material/emailMaterialPageList", request, cancellationToken);
 
         /// <summary>
         /// 调用邮件素材详情接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXMaterialDetails>> EmailMaterialDetailsAsync(object request, CancellationToken cancellationToken = default)
-            => GetAsync<WebpowerXMaterialDetails>("openapi/open-api/v1/material/emailMaterialDetails", request, cancellationToken);
+        public Task<ApiResponse<MaterialDetails>> EmailMaterialDetailsAsync(MaterialSnQuery request, CancellationToken cancellationToken = default)
+            => GetAsync<MaterialDetails>("openapi/open-api/v1/material/emailMaterialDetails", request, cancellationToken);
 
         /// <summary>
         /// 调用创建邮件素材接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXMaterialUpsertResult>> CreateMaterialAsync(object request, CancellationToken cancellationToken = default)
-            => SendJsonAsync<WebpowerXMaterialUpsertResult>("openapi/open-api/v1/material/createMaterial", request, cancellationToken);
+        public Task<ApiResponse<MaterialUpsertResult>> CreateMaterialAsync(CreateMaterialRequest request, CancellationToken cancellationToken = default)
+            => SendJsonAsync<MaterialUpsertResult>("openapi/open-api/v1/material/createMaterial", request, cancellationToken);
 
         /// <summary>
         /// 调用编辑邮件素材接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXMaterialUpsertResult>> EditMaterialAsync(object request, CancellationToken cancellationToken = default)
-            => SendJsonAsync<WebpowerXMaterialUpsertResult>("openapi/open-api/v1/material/editMaterial", request, cancellationToken);
+        public Task<ApiResponse<MaterialUpsertResult>> EditMaterialAsync(EditMaterialRequest request, CancellationToken cancellationToken = default)
+            => PutJsonAsync<MaterialUpsertResult>("openapi/open-api/v1/material/editMaterial", request, cancellationToken);
 
         /// <summary>
         /// 调用删除邮件素材接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXEmptyResult>> DeleteMaterialAsync(object request, CancellationToken cancellationToken = default)
-            => SendJsonAsync<WebpowerXEmptyResult>("openapi/open-api/v1/material/deleteMaterial", request, cancellationToken);
+        public Task<ApiResponse<EmptyResult>> DeleteMaterialAsync(MaterialSnQuery request, CancellationToken cancellationToken = default)
+            => DeleteAsync<EmptyResult>("openapi/open-api/v1/material/deleteMaterial", request, cancellationToken);
 
         #endregion
 
@@ -341,27 +350,45 @@ namespace WebpowerX.Client
         /// <summary>
         /// 调用邮件报告接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<WebpowerXEmailReport>> GetEmailReportAsync(object? request = null, CancellationToken cancellationToken = default)
-            => GetAsync<WebpowerXEmailReport>("openapi/open-api/v1/iEmailCallback/getEmailReport", request, cancellationToken);
+        public Task<ApiResponse<EmailReport>> GetEmailReportAsync(EmailReportRequest request, CancellationToken cancellationToken = default)
+            => SendJsonAsync<EmailReport>("openapi/open-api/v1/iEmailCallback/getEmailReport", request, cancellationToken);
 
         /// <summary>
         /// 调用事件记录查询接口。
         /// </summary>
-        public Task<WebpowerXApiResponse<List<WebpowerXEmailEventRecord>>> GetStatisticsDataTypeAsync(object? request = null, CancellationToken cancellationToken = default)
-            => GetAsync<List<WebpowerXEmailEventRecord>>("openapi/open-api/v1/iEmailCallback/getStatisticsDataType", request, cancellationToken);
+        public Task<ApiResponse<List<EmailEventRecord>>> GetStatisticsDataTypeAsync(EventRecordQuery request, CancellationToken cancellationToken = default)
+            => SendJsonAsync<List<EmailEventRecord>>("openapi/open-api/v1/iEmailCallback/getStatisticsDataType", request, cancellationToken);
 
         #endregion
 
         /// <summary>
         /// 发送 JSON 请求。
         /// </summary>
-        private Task<WebpowerXApiResponse<TResponse>> SendJsonAsync<TResponse>(string path, object body, CancellationToken cancellationToken = default)
+        private Task<ApiResponse<TResponse>> SendJsonAsync<TResponse>(string path, object body, CancellationToken cancellationToken = default)
             => SendAsync<TResponse>(path, HttpMethod.Post, body, null, cancellationToken);
+
+        /// <summary>
+        /// 发送 PUT JSON 请求。
+        /// </summary>
+        private Task<ApiResponse<TResponse>> PutJsonAsync<TResponse>(string path, object body, CancellationToken cancellationToken = default)
+            => SendAsync<TResponse>(path, HttpMethod.Put, body, null, cancellationToken);
+
+        /// <summary>
+        /// 发送带 JSON 请求体的 DELETE 请求。
+        /// </summary>
+        private Task<ApiResponse<TResponse>> DeleteJsonAsync<TResponse>(string path, object body, CancellationToken cancellationToken = default)
+            => SendAsync<TResponse>(path, HttpMethod.Delete, body, null, cancellationToken);
+
+        /// <summary>
+        /// 发送带查询参数的 DELETE 请求。
+        /// </summary>
+        private Task<ApiResponse<TResponse>> DeleteAsync<TResponse>(string path, object query, CancellationToken cancellationToken)
+            => SendAsync<TResponse>(path, HttpMethod.Delete, null, query, cancellationToken);
 
         /// <summary>
         /// 发送请求并反序列化响应。
         /// </summary>
-        private async Task<WebpowerXApiResponse<TResponse>> SendAsync<TResponse>(string path, HttpMethod method, object? body, object? query, CancellationToken cancellationToken)
+        private async Task<ApiResponse<TResponse>> SendAsync<TResponse>(string path, HttpMethod method, object? body, object? query, CancellationToken cancellationToken)
         {
             var accessSign = WebpowerXSignatureGenerator.Generate(_options.AccessKeySecret);
             var requestUri = query != null ? path + BuildQueryString(query) : path;
@@ -380,10 +407,17 @@ namespace WebpowerX.Client
 
             if (!response.IsSuccessStatusCode)
             {
-                throw new WebpowerXApiRequestException($"HTTP {(int)response.StatusCode} from WebpowerX API: {content}");
+                // 接入层校验失败（如 IP 白名单、签名问题）时，服务端仍会返回 JSON 信封，尽量还原成结构化异常。
+                var errorEnvelope = TryDeserialize<ApiResponse<EmptyResult>>(content);
+                if (errorEnvelope != null && errorEnvelope.Code != 0)
+                {
+                    throw new WebpowerXApiException(errorEnvelope.Code, errorEnvelope.Message, errorEnvelope.ResponseId, errorEnvelope.TraceNumber);
+                }
+
+                throw new WebpowerXApiRequestException($"HTTP {(int)response.StatusCode} from WebpowerX API: {content}", null, (int)response.StatusCode);
             }
 
-            var envelope = JsonSerializer.Deserialize<WebpowerXApiResponse<TResponse>>(content, JsonDefaults.Options)
+            var envelope = JsonSerializer.Deserialize<ApiResponse<TResponse>>(content, JsonDefaults.Options)
                 ?? throw new WebpowerXApiRequestException("Failed to deserialize WebpowerX API response.");
 
             if (!envelope.IsSuccess)
@@ -395,9 +429,24 @@ namespace WebpowerX.Client
         }
 
         /// <summary>
+        /// 尝试反序列化响应体，失败时返回 null 而不是抛出异常。
+        /// </summary>
+        private static T? TryDeserialize<T>(string content) where T : class
+        {
+            try
+            {
+                return JsonSerializer.Deserialize<T>(content, JsonDefaults.Options);
+            }
+            catch (JsonException)
+            {
+                return default;
+            }
+        }
+
+        /// <summary>
         /// 发送 GET 请求并反序列化响应。
         /// </summary>
-        private Task<WebpowerXApiResponse<TResponse>> GetAsync<TResponse>(string path, object? query, CancellationToken cancellationToken)
+        private Task<ApiResponse<TResponse>> GetAsync<TResponse>(string path, object? query, CancellationToken cancellationToken)
             => SendAsync<TResponse>(path, HttpMethod.Get, null, query, cancellationToken);
 
         /// <summary>
@@ -414,29 +463,35 @@ namespace WebpowerX.Client
                     AppendPair(pairs, pair.Key, pair.Value);
                 }
             }
-            else if (query is IEnumerable<KeyValuePair<string, object?>> dictNullable)
-            {
-                foreach (var pair in dictNullable)
-                {
-                    AppendPair(pairs, pair.Key, pair.Value);
-                }
-            }
             else
             {
-                var props = query.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public);
-                for (var i = 0; i < props.Length; i++)
+                var parameters = GetQueryParameters(query.GetType());
+                for (var i = 0; i < parameters.Length; i++)
                 {
-                    var prop = props[i];
-                    if (!prop.CanRead)
-                    {
-                        continue;
-                    }
-
-                    AppendPair(pairs, prop.Name, prop.GetValue(query, null));
+                    AppendPair(pairs, parameters[i].Name, parameters[i].Property.GetValue(query, null));
                 }
             }
 
             return pairs.Count == 0 ? string.Empty : "?" + string.Join("&", pairs);
+        }
+
+        /// <summary>
+        /// 读取查询对象的参数定义，结果按类型缓存，避免每次请求重复反射。
+        /// </summary>
+        private static QueryParameter[] GetQueryParameters(Type type)
+            => QueryParameterCache.GetOrAdd(type, t => t
+                .GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                .Where(p => p.CanRead)
+                .Select(p => new QueryParameter(GetQueryParameterName(p), p))
+                .ToArray());
+
+        /// <summary>
+        /// 获取查询参数名，优先使用 <see cref="JsonPropertyNameAttribute" />。
+        /// </summary>
+        private static string GetQueryParameterName(PropertyInfo property)
+        {
+            var attribute = property.GetCustomAttribute<JsonPropertyNameAttribute>();
+            return attribute != null ? attribute.Name : property.Name;
         }
 
         /// <summary>
@@ -449,7 +504,19 @@ namespace WebpowerX.Client
                 return;
             }
 
-            var text = Convert.ToString(value, System.Globalization.CultureInfo.InvariantCulture);
+            if (value is IEnumerable values && !(value is string))
+            {
+                foreach (var item in values)
+                {
+                    AppendPair(pairs, key, item);
+                }
+
+                return;
+            }
+
+            var text = value is bool flag
+                ? (flag ? "true" : "false")
+                : Convert.ToString(value, System.Globalization.CultureInfo.InvariantCulture);
             if (string.IsNullOrWhiteSpace(text))
             {
                 return;
@@ -458,10 +525,21 @@ namespace WebpowerX.Client
             pairs.Add(Uri.EscapeDataString(key) + "=" + Uri.EscapeDataString(text));
         }
 
+
         /// <summary>
-        /// 保证 BaseUrl 以 / 结尾，方便后续拼接相对路径。
+        /// 单个查询参数的定义。
         /// </summary>
-        private static string NormalizeBaseUrl(string baseUrl)
-            => baseUrl.EndsWith("/", StringComparison.Ordinal) ? baseUrl : baseUrl + "/";
+        private sealed class QueryParameter
+        {
+            public QueryParameter(string name, PropertyInfo property)
+            {
+                Name = name;
+                Property = property;
+            }
+
+            public string Name { get; }
+
+            public PropertyInfo Property { get; }
+        }
     }
 }

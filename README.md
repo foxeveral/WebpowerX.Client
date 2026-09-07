@@ -1,4 +1,4 @@
-# WebpowerX.Client
+﻿# WebpowerX.Client
 
 一个面向开发者使用的 WebpowerX iEmail 客户端 SDK。
 
@@ -27,15 +27,35 @@ services.AddWebpowerXApiClient(options =>
 var provider = services.BuildServiceProvider();
 var client = provider.GetRequiredService<IWebpowerXApiClient>();
 
-var response = await client.SendSingleTransactionalEmailAsync(new WebpowerXSingleEmailRequest
+var response = await client.SendSingleTransactionalEmailAsync(new SingleEmailRequest
 {
     SenderAddressSn = "senderAddressSn",
     Subject = "账户安全验证码",
-    Content = new WebpowerXContent { Type = "html", Value = "<p>Hello</p>" },
-    Recipient = new WebpowerXRecipient { Email = "user@example.com", Name = "张三" }
+    Content = new EmailContent { Type = "html", Value = "<p>Hello</p>" },
+    Recipient = new Recipient { Email = "user@example.com", Name = "张三" },
+    SubstitutionObj = new Substitution
+    {
+        Data = new Dictionary<string, object?> { ["code"] = "839201" }
+    }
 });
 
-var domain = await client.GetDomainAsync("example.com");
+// 批量发送普通邮件：收件人数组与单封发送不同，最多 1000 人，不支持 Enjoy 业务数据。
+var bulkResponse = await client.SendBulkEmailsAsync(new BulkEmailRequest
+{
+    SenderAddressSn = "senderAddressSn",
+    Subject = "订单 {$orderNo} 已发货",
+    Content = new EmailContent { Type = "html", Value = "<p>您好，{$name}，订单 {$orderNo} 已发货。</p>" },
+    Recipients = new List<Recipient>
+    {
+        new Recipient { Email = "alice@example.com", Name = "Alice" },
+        new Recipient { Email = "bob@example.com", Name = "Bob" }
+    }
+});
+
+var domain = await client.GetDomainAsync(new GetDomainQuery
+{
+    Domain = "example.com"
+});
 ```
 
 ## 已实现接口
@@ -56,3 +76,4 @@ var domain = await client.GetDomainAsync("example.com");
 - 联系人属性管理
 - 标签管理
 - 内容素材管理
+- 发送数据统计
