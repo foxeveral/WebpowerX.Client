@@ -4,6 +4,7 @@ WebpowerX.Sample/
 # .NET 构建产物
 bin/
 obj/
+artifacts/
 
 # IDE 与用户配置
 .vs/

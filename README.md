@@ -27,7 +27,7 @@ services.AddWebpowerXApiClient(options =>
 var provider = services.BuildServiceProvider();
 var client = provider.GetRequiredService<IWebpowerXApiClient>();
 
-var response = await client.SendSingleTransactionalEmailAsync(new SingleEmailRequest
+var response = await client.SendTransEmailAsync(new SingleEmailRequest
 {
     SenderAddressSn = "senderAddressSn",
     Subject = "账户安全验证码",
@@ -52,7 +52,7 @@ var bulkResponse = await client.SendBulkEmailsAsync(new BulkEmailRequest
     }
 });
 
-var domain = await client.GetDomainAsync(new GetDomainQuery
+var domain = await client.GetDomainAsync(new DomainQuery
 {
     Domain = "example.com"
 });
@@ -77,3 +77,17 @@ var domain = await client.GetDomainAsync(new GetDomainQuery
 - 标签管理
 - 内容素材管理
 - 发送数据统计
+
+## 打包与发布
+
+```powershell
+# 只生成本地 NuGet 包
+powershell -ExecutionPolicy Bypass -File .\nupkg\pack.ps1 -Version 1.0.0
+
+# 发布到 NuGet.org，API Key 可通过参数传入
+powershell -ExecutionPolicy Bypass -File .\nupkg\publish.ps1 -Version 1.0.0 -ApiKey "your-nuget-api-key" -SkipDuplicate
+
+# 或者先设置环境变量，避免 API Key 出现在命令历史里
+$env:NUGET_API_KEY = "your-nuget-api-key"
+powershell -ExecutionPolicy Bypass -File .\nupkg\publish.ps1 -Version 1.0.0 -SkipDuplicate
+```
