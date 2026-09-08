@@ -6,7 +6,7 @@
     <Version>1.0.0</Version>
     <Authors>foxeveral</Authors>
     <Description>WebpowerX iEmail open API client SDK for .NET</Description>
-    <PackageTags>WebpowerX;iEmail;email;sdk;client</PackageTags>
+    <PackageTags>WebpowerX</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageProjectUrl>https://github.com/foxeveral/WebpowerX.Client</PackageProjectUrl>
