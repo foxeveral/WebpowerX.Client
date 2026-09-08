@@ -1,7 +1,6 @@
 # .github/workflows/publish.yml
 name: Publish NuGet Package
 
-# 1. 触发条件：当推送的tag符合 "v*" 格式时触发，例如 v1.0.0, v2.1.3
 on:
   push:
     tags:
@@ -10,43 +9,41 @@ on:
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
+    
+    # ⭐ 关键步骤1：为 job 添加 id-token 权限，允许 GitHub 向 NuGet 证明身份
+    permissions:
+      contents: read
+      id-token: write  # 这一行必不可少！
+
     steps:
-    # 2. 拉取代码
     - name: Checkout code
       uses: actions/checkout@v4
-      # 需要 fetch-depth: 0 才能获取所有tag信息
       with:
         fetch-depth: 0
 
-    # 3. 设置 .NET 环境
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '8.0.x' # 请替换为你的项目使用的 .NET 版本[reference:8][reference:9]
+        dotnet-version: '8.0.x'
 
-    # 4. 还原依赖
     - name: Restore dependencies
       run: dotnet restore
 
-    # 5. 构建项目（Release模式）
     - name: Build
       run: dotnet build --configuration Release --no-restore
 
-    # 6. 运行单元测试 (可选但强烈推荐)
     - name: Run tests
       run: dotnet test --configuration Release --no-build --verbosity normal
 
-    # 7. 打包成 .nupkg 文件
     - name: Pack NuGet package
-      # /p:PackageVersion 从Git tag中提取版本号（如v1.0.0 -> 1.0.0）
       run: |
         VERSION=${GITHUB_REF_NAME#v}
         dotnet pack --configuration Release --no-build --output ./nupkg /p:PackageVersion=$VERSION
 
-    # 8. 发布到 NuGet.org
-    - name: Push to NuGet.org
+    # ⭐ 关键步骤2：发布命令中移除 --api-key，改为指定 NuGet 源
+    - name: Push to NuGet.org (Trusted Publisher)
       run: |
         dotnet nuget push ./nupkg/*.nupkg \
-          --api-key ${{ secrets.NUGET_API_KEY }} \
           --source https://api.nuget.org/v3/index.json \
-          --skip-duplicate # 如果包已存在则跳过，避免构建失败[reference:10][reference:11]
+          --skip-duplicate
+      # ⚠️ 注意：这里不再需要 --api-key 参数！
